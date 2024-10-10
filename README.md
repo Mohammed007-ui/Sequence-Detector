@@ -86,55 +86,81 @@ OUTPUT:![image](https://github.com/user-attachments/assets/6fe2aa2c-ad2e-4c6d-88
 
 
 Verilog Code for Sequence Detector Using Mealy FSM
+~~~
+CODE: 
+module mealy(clk,rst,inp,out);
+ input clk, rst, inp;
+ output out;
+ reg out;
+ reg [1:0] state;
+ always @(posedge clk, posedge rst)
+ begin
+     if(rst)
+     begin
+     out <= 0;
+            state <= 2'b00;
+         end
+     else
+         begin
+             case (state)
+             2'b00: 
+                 begin
+                     if (inp) begin
+                         state <=2'b01;
+                         out <=0;
+                     end
+                     else begin
+                         state <=2'b10;
+                         out <=0;
+                    end
+                 end
+             2'b01:
+                 begin
 
-// mealy_sequence_detector.v
-module mealy_sequence_detector (
-    input wire clk,
-    input wire reset,
-    input wire seq_in,
-    output reg detected
-);
-    typedef enum reg [2:0] {
-        S0, S1, S2, S3  // States for detecting 1011
-    } state_t;
+                     if(inp) begin
 
-    state_t current_state, next_state;
+                         state <= 2'b00;
 
-    // State transition logic
-    always @(posedge clk or posedge reset) begin
-        if (reset)
-            current_state <= S0;
-        else
-            current_state <= next_state;
-    end
+                         out <= 1;
 
-    // Next state and output logic
-    always @(*) begin
-        detected = 0;
-        case (current_state)
-            S0: begin
-                if (seq_in) next_state = S1;
-                else next_state = S0;
-            end
-            S1: begin
-                if (seq_in) next_state = S1;
-                else next_state = S2;
-            end
-            S2: begin
-                if (seq_in) next_state = S3;
-                else next_state = S0;
-            end
-            S3: begin
-                if (seq_in) begin
-                    next_state = S1;
-                    detected = 1;  // Sequence 1011 detected
-                end else
-                    next_state = S2;
-            end
-            default: next_state = S0;
-        endcase
-    end
-endmodule
+                     end
+
+                     else begin
+
+                         state <= 2'b10;
+
+                         out <= 0;
+                     end
+                 end
+             2'b10:
+                 begin
+                     if(inp) begin
+
+                         state <= 2'b01;
+
+                         out <= 0;
+
+                     end
+
+                     else begin
+
+                         state <= 2'b00;
+
+                         out <= 1;
+                     end
+                 end
+             default:
+                 begin
+                     state <= 2'b00;
+                     out <= 0;
+                 end
+             endcase
+         end
+ end
+ endmodule 
+ ~~~
+OUTPUT:![image](https://github.com/user-attachments/assets/cc3408a6-2bf8-4cac-aac4-29138e6bc422)
+
 
 
 Testbench for Sequence Detector (Moore and Mealy FSMs)
@@ -197,6 +223,64 @@ endmodule
 ~~~
 
 OUTPUT:![image](https://github.com/user-attachments/assets/e19d9710-fdc3-4450-9714-4ad3331ee17e)
+TESTBENCH FOR MELAY:
+CODE:
+~~~
+// directly test values given
+ 
+`timescale 1ns/1ns
+
+ module mealy_tb;
+
+ wire out;
+
+ reg clk,rst,inp;
+
+ reg [15:0] seq; 
+
+ integer i;
+
+ mealy instance22(clk, rst, inp, out);
+
+ initial begin
+
+     clk=0;
+
+     rst=1;
+
+     seq=16'b1010_0001_1100_0101;
+
+     #5 rst=0;
+
+ end
+
+ always begin
+
+       $dumpfile("mealy_direct.vcd");
+
+             $dumpvars();
+
+     for( i = 0; i <= 15; i = i+1)
+
+         begin
+
+             inp = seq[i];
+
+             #2 clk=1;
+
+             #2 clk=0;
+
+             $display("state = ",instance22.state,"| input = ",inp,"| output = ",out);
+
+         end
+
+        #100 $finish();
+
+ end
+
+ endmodule 
+ ~~~
+OUTPUT: ![image](https://github.com/user-attachments/assets/c8aad057-47af-462f-9bf4-dd871ed01689)
 
 
 Conclusion
